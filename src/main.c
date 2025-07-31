@@ -6,7 +6,7 @@ int main() {
     Board board[1];
     init_all_attack_tables();
     parse_fen(board, start_position);
-    perft_with_output(board, 6);
+    perft_with_output(board, 7);
 
     return 0;
 }

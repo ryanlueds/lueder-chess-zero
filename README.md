@@ -3,14 +3,30 @@
 chess engine
 
 ## Features
-
 - [x] bitboards with magic square stuff
 - [x] pretty fast move gen
 - [ ] mcts that actually works
 - [ ] working python code
 
-## perft(7)
+## Build
+```
+cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
+cmake --build build
+```
 
+```
+# perft(7) (make sure you use release compiler flags)
+./build/bin/lueder-computer
+
+# tests all https://www.chessprogramming.org/Perft_Results
+./build/bin/perft_runner
+
+# tests for move generation edge cases (tons of edge cases...)
+./build/bin/test_runner
+```
+
+
+## perft(7)
 ```
 Performance test
 
