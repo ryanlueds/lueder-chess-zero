@@ -11,6 +11,7 @@ from wrapper import (
     get_bit, is_in_check
 )
 from config import Config
+from helper import move_to_str
 
 
 class bcolors:
@@ -45,8 +46,8 @@ class Pieces(IntEnum):
     k=11
 
 directions = {
-    (-1, 0):  0,  # N
-    (-1, 1):  1,  # NE
+    (-1, 0):  0, # N
+    (-1, 1):  1, # NE
     (0, 1):   2, # E
     (1, 1):   3, # SE
     (1, 0):   4, # S
@@ -181,20 +182,29 @@ class Node:
         for i in range(moves.count):
             move = moves.moves[i]
             policy_idx = move_to_policy_index(move)
-            prior = torch.exp(policy_tensor[policy_idx]).item()
+            prior = policy_tensor[policy_idx].item()
             self.children[move] = Node(1 - self.player, prior, self, move)
         self.is_expanded = True
 
 
-def select_child(node, c_puct=2.0):
+# TODO: passing my mcts tests relies very much on c_puct being set to i have no idea. 
+#       Gotta implement a way to tune this while doing a search or something
+def select_child(node, c_puct=4.0):
     best_child = None
     best_score = -float('inf')
+    # if node.move and move_to_str(node.move) == "e7h4":
+    #     print(f"--- select_child for move {move_to_str(node.move) if node.move else "root":6}---")
     for child in node.children.values():
-        score = child.Q + c_puct * child.prior * (node.visit_count**0.5 / (1 + child.visit_count))
+        U = c_puct * child.prior * (node.visit_count**0.5 / (1 + child.visit_count))
+        score = child.Q + U
+        # if node.move and move_to_str(node.move) == "e7h4":
+        #     print(f"    move={move_to_str(child.move):6}  Q={child.Q: .3f}  U={U: .3f}   score={score: .3f}")
         if score > best_score:
             best_score = score
             best_child = child
+    # print(f" selected ->{move_to_str(best_child.move):6} (score {best_score:.3f})")
     return best_child
+
 
 def mcts_search(root_state, net, config: Config, device, add_noise=False):
     root = Node(root_state.side)
@@ -220,6 +230,7 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
             value = outcome_value(board)
         elif node:
             policy, value = net(board_to_tensor(board).to(device))
+            policy = torch.softmax(policy, dim=1)
             node.expand(board, policy[0])
 
         if node:
@@ -229,8 +240,14 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
                 n.total_value += v
                 v = -v
                 n.Q = n.total_value / n.visit_count
+
+            # if i % 1000 == 999:
+            #     print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
+            #     for move, child in root.children.items():
+            #         print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
     
     return root
+
 
 def calculate_material_advantage(board: Board):
     piece_values = {
@@ -257,15 +274,17 @@ def calculate_material_advantage(board: Board):
     else: # black
         return (black_material - white_material) / (white_material + black_material + 1e-6)
 
+
 def outcome_value(state):
     moves = Moves()
     generate_moves(ctypes.byref(state), ctypes.byref(moves))
     if moves.count == 0:
         if is_in_check(ctypes.byref(state), state.side):
-            return torch.tensor([-1.0], dtype=torch.float32) # checkmate TODO
+            return torch.tensor([1.0], dtype=torch.float32) # checkmate TODO
         else:
             return torch.tensor([0.0], dtype=torch.float32) # stalemate
     return torch.tensor([0.0], dtype=torch.float32) # throw error?
+
 
 if __name__ == "__main__":
     config = Config()
