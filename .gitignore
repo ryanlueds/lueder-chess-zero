@@ -1,0 +1,16 @@
+*.o
+*.dll
+*.so
+*.so.*
+*.dylib
+
+*__pycache__
+*perf.data*
+
+perft_runner
+test_runner
+lueder-computer
+build/
+alphazero/data/
+alphazero/models/
+alphazero/runs/
