@@ -145,7 +145,6 @@ class TestMCTS(unittest.TestCase):
 
         
     def test_move_to_policy_index(self):
-        print("e2e4")
         board = Board()
         parse_fen(ctypes.byref(board), b"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         moves = Moves()
@@ -164,7 +163,6 @@ class TestMCTS(unittest.TestCase):
         self.assertEqual(source, 52)
         self.assertEqual(target, 36)
 
-        print("g1f3")
         g1f3_move = -1
         for i in range(moves.count):
             move = moves.moves[i]
@@ -181,7 +179,6 @@ class TestMCTS(unittest.TestCase):
         self.assertEqual(target, 45)
 
         # underpromotion to a knight with advantage
-        print("f7f8N")
         board = Board()
         parse_fen(ctypes.byref(board), b"8/5P1k/5Q2/6Q1/8/8/8/4K3 w - - 0 1")
         moves = Moves()
@@ -200,7 +197,6 @@ class TestMCTS(unittest.TestCase):
         self.assertEqual(target, 5)
 
         # black pawn captures to the left, underpromoting to a bishop---with advantage
-        print("b2a1b")
         board = Board()
         parse_fen(ctypes.byref(board), b"k6K/5q2/8/8/8/8/1p6/Q7 b - - 0 1")
         moves = Moves()

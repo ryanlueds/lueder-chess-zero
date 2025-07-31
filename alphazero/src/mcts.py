@@ -111,7 +111,7 @@ def policy_index_to_move(policy_idx):
     # queen move
     if move_type < 56:
         direction = move_type // 8
-        num_sq = move_type % 7
+        num_sq = move_type % 7 + 1
         dr, df = inverse_directions[direction]
         tr, tf = sr + dr * num_sq, sf + df * num_sq
         target = tr * 8 + tf
@@ -119,19 +119,19 @@ def policy_index_to_move(policy_idx):
     elif move_type < 64:
         direction = move_type - 56
         dr, df = inverse_knight_map[direction]
-        tr, tf = sr + dr, sf, + df
+        tr, tf = sr + dr, sf + df
         target = tr * 8 + tf
     # underpromotion
     else:
-        df = ((move - 64) % 3) - 1
-        promoted_piece = inverse_promoted_map[(move - 64) // 3]
+        df = ((move_type - 64) % 3) - 1
+        promoted_piece = inverse_promoted_map[(move_type - 64) // 3]
         # white pawn promoted
         if source - 16 <= 0:
             tr = 0
         else:
             tr = 7
             # +6 makes Pieces.N -> Pieces.n
-            promoted_piece + 6
+            promoted_piece += 6
         target = tr * 8 + sf + df
 
     return source, target, promoted_piece 
