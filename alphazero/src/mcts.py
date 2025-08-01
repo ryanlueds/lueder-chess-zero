@@ -182,13 +182,12 @@ class Node:
             move = moves.moves[i]
             policy_idx = move_to_policy_index(move)
             prior = policy_tensor[policy_idx].item()
+            # prior = 1     uncomment this to test mcts
             self.children[move] = Node(1 - self.player, prior, self, move)
         self.is_expanded = True
 
 
-# TODO: passing my mcts tests relies very much on c_puct being set to i have no idea. 
-#       Gotta implement a way to tune this while doing a search or something
-def select_child(node, c_puct=4.0):
+def select_child(node, c_puct=1.4):
     best_child = None
     best_score = -float('inf')
     # if node.move and move_to_str(node.move) == "e7h4":
@@ -210,15 +209,7 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
 
     policy, value = net(board_to_tensor(root_state).to(device))
 
-    moves = Moves()
-    board = Board()
-    generate_moves(ctypes.byref(board), ctypes.byref(moves))
-    policy = torch.zeros(4762)
-    for i in range(moves.count):
-        idx = move_to_policy_index(moves.moves[i])
-        policy[idx] = 1.0
-    policy /= policy.sum()
-    # policy = torch.softmax(policy, dim=1)
+    policy = torch.softmax(policy, dim=1)
     root.expand(root_state, policy[0])
 
     for i in range(config.mcts.num_simulations):
@@ -238,15 +229,7 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
             value = outcome_value(board)
         elif node:
             policy, value = net(board_to_tensor(board).to(device))
-            # policy = torch.softmax(policy, dim=1)
-
-            moves = Moves()
-            generate_moves(ctypes.byref(board), ctypes.byref(moves))
-            policy = torch.zeros(4762)
-            for i in range(moves.count):
-                idx = move_to_policy_index(moves.moves[i])
-                policy[idx] = 1.0
-            policy /= policy.sum()
+            policy = torch.softmax(policy, dim=1)
             node.expand(board, policy[0])
 
         if node:

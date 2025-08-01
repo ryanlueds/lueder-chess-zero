@@ -161,14 +161,14 @@ class TestMCTS(unittest.TestCase):
     def test_mate_in_2(self):
         fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
         winning_move = "e7h4"
-        best_move = find_best_move(fen, 500_000, self.real_net)
+        best_move = find_best_move(fen, 100_000, self.real_net)
         self.assertEqual(best_move, winning_move)
 
-    # def test_mate_in_3(self):
-    #     fen = "r1bqk2r/ppp1bppp/8/4B3/6P1/5P2/PPPPP3/3RKB1R b kq - 2 6"
-    #     winning_move = "e7h4"
-    #     best_move = find_best_move(fen, 50000, self.real_net)
-    #     self.assertEqual(best_move, winning_move)
+    def test_mate_in_3(self):
+        fen = "r1bqk2r/ppp1bppp/8/4B3/6P1/5P2/PPPPP3/3RKB1R b kq - 2 6"
+        winning_move = "e7h4"
+        best_move = find_best_move(fen, 200_000, self.real_net)
+        self.assertEqual(best_move, winning_move)
 
 if __name__ == "__main__":
     unittest.main()
