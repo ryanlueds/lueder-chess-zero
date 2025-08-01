@@ -15,6 +15,18 @@ from wrapper import (
     get_move_source, get_move_target, get_move_promoted
 )
 
+
+class bcolors:
+    HEADER = '[95m'
+    OKBLUE = '[94m'
+    OKCYAN = '[96m'
+    OKGREEN = '[92m'
+    WARNING = '[93m'
+    FAIL = '[91m'
+    ENDC = '[0m'
+    BOLD = '[1m'
+    UNDERLINE = '[4m'
+
 def square_to_str(sq):
     rank = sq // 8
     file = sq % 8
@@ -23,7 +35,6 @@ def square_to_str(sq):
     f = "abcdefgh"[real_sq % 8]
     r = "12345678"[real_sq // 8]
     return f + r
-
 
 def move_to_str(move):
     source_sq = get_move_source(move)

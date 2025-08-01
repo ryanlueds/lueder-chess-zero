@@ -11,8 +11,7 @@ from wrapper import (
     get_bit, is_in_check
 )
 from config import Config
-from helper import move_to_str
-
+from utils import move_to_str
 
 class bcolors:
     HEADER = '[95m'
@@ -183,13 +182,12 @@ class Node:
             move = moves.moves[i]
             policy_idx = move_to_policy_index(move)
             prior = policy_tensor[policy_idx].item()
+            # prior = 1     uncomment this to test mcts
             self.children[move] = Node(1 - self.player, prior, self, move)
         self.is_expanded = True
 
 
-# TODO: passing my mcts tests relies very much on c_puct being set to i have no idea. 
-#       Gotta implement a way to tune this while doing a search or something
-def select_child(node, c_puct=4.0):
+def select_child(node, c_puct=1.4):
     best_child = None
     best_score = -float('inf')
     # if node.move and move_to_str(node.move) == "e7h4":
@@ -210,6 +208,7 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
     root = Node(root_state.side)
 
     policy, value = net(board_to_tensor(root_state).to(device))
+
     policy = torch.softmax(policy, dim=1)
     root.expand(root_state, policy[0])
 
@@ -241,10 +240,10 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
                 v = -v
                 n.Q = n.total_value / n.visit_count
 
-            # if i % 1000 == 999:
-            #     print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
-            #     for move, child in root.children.items():
-            #         print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
+            if i % 10_000 == 10_000 - 1:
+                print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
+                for move, child in root.children.items():
+                    print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
     
     return root
 
