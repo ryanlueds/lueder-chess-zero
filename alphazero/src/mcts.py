@@ -11,7 +11,7 @@ from wrapper import (
     get_bit, is_in_check
 )
 from config import Config
-from helper import move_to_str
+from utils import move_to_str
 
 
 class bcolors:
