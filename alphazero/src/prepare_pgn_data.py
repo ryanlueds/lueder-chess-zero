@@ -89,10 +89,9 @@ def parallel_process_all(input_dir, output_dir, min_elo=2000):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_file")
-    parser.add_argument("output_file")
+    parser.add_argument("input_dir")
+    parser.add_argument("output_dir")
     args = parser.parse_args()
 
-    min_elo = 2000
-    decompress_and_filter_pgn(args.input_file, args.output_file, min_elo)
+    parallel_process_all(args.input_dir, args.output_dir, min_elo=2000)
 
