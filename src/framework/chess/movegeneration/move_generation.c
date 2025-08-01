@@ -84,13 +84,13 @@ void generate_moves(const Board* board, Moves* move_list) {
             source_square = bitscan_forward(bitboard);
             uint64_t pin_ray = get_bit(pinned_pieces, source_square) ? pin_rays[source_square] : ~0ULL;
 
-            if (piece == P || piece == p) {  // Pawns
-                // Pawn pushes
+            if (piece == P || piece == p) {
+                // pawn pushes
                 if (side == white) {
                     target_square = source_square - 8;
                     if (target_square >= a8 && !get_bit(board->occupancies[both], target_square)) {
                         if ((1ULL << target_square) & check_mask & pin_ray) {
-                            if (source_square >= a7 && source_square <= h7) {  // Promotions
+                            if (source_square >= a7 && source_square <= h7) {  // promotions
                                 add_move(move_list, encode_move(source_square, target_square, piece, Q, 0, 0, 0, 0));
                                 add_move(move_list, encode_move(source_square, target_square, piece, R, 0, 0, 0, 0));
                                 add_move(move_list, encode_move(source_square, target_square, piece, B, 0, 0, 0, 0));
