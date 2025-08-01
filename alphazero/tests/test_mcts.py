@@ -18,7 +18,7 @@ from wrapper import (
     get_move_source, get_move_target, get_move_promoted
 )
 from mcts import board_to_tensor, move_to_policy_index, policy_index_to_move
-from helper import square_to_str, move_to_str, find_best_move, convert_channel_to_bitboard
+from utils import square_to_str, move_to_str, find_best_move, convert_channel_to_bitboard
 
 
 class Pieces(IntEnum):
@@ -143,26 +143,26 @@ class TestMCTS(unittest.TestCase):
     def test_mate_in_1(self):
         fen = "1k6/ppp5/8/8/8/8/8/4K2R w - - 0 1"
         winning_move = "h1h8"
-        best_move = find_best_move(fen, 5000, self.real_net)
+        best_move = find_best_move(fen, 10000, self.real_net)
         self.assertEqual(best_move, winning_move)
 
     def test_mate_in_1_black(self):
         fen = "qk6/8/8/8/8/8/PPP5/1K6 b - - 0 1"
         winning_move = "a8h1"
-        best_move = find_best_move(fen, 5000, self.real_net)
+        best_move = find_best_move(fen, 10000, self.real_net)
         self.assertEqual(best_move, winning_move)
 
     def test_mate_in_1_capture(self):
         fen = "r1bqk2r/ppp1bppp/8/8/6PN/5P2/PPPPP3/RNBQKB2 b - - 0 1"
         winning_move = "e7h4"
-        best_move = find_best_move(fen, 5000, self.real_net) # these should not require this many simulations
+        best_move = find_best_move(fen, 10000, self.real_net) # these should not require this many simulations
         self.assertEqual(best_move, winning_move)
 
-    # def test_mate_in_2(self):
-    #     fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
-    #     winning_move = "e7h4"
-    #     best_move = find_best_move(fen, 200_000, self.real_net)
-    #     self.assertEqual(best_move, winning_move)
+    def test_mate_in_2(self):
+        fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
+        winning_move = "e7h4"
+        best_move = find_best_move(fen, 500_000, self.real_net)
+        self.assertEqual(best_move, winning_move)
 
     # def test_mate_in_3(self):
     #     fen = "r1bqk2r/ppp1bppp/8/4B3/6P1/5P2/PPPPP3/3RKB1R b kq - 2 6"

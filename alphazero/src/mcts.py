@@ -13,7 +13,6 @@ from wrapper import (
 from config import Config
 from utils import move_to_str
 
-
 class bcolors:
     HEADER = '[95m'
     OKBLUE = '[94m'
@@ -210,7 +209,16 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
     root = Node(root_state.side)
 
     policy, value = net(board_to_tensor(root_state).to(device))
-    policy = torch.softmax(policy, dim=1)
+
+    moves = Moves()
+    board = Board()
+    generate_moves(ctypes.byref(board), ctypes.byref(moves))
+    policy = torch.zeros(4762)
+    for i in range(moves.count):
+        idx = move_to_policy_index(moves.moves[i])
+        policy[idx] = 1.0
+    policy /= policy.sum()
+    # policy = torch.softmax(policy, dim=1)
     root.expand(root_state, policy[0])
 
     for i in range(config.mcts.num_simulations):
@@ -230,7 +238,15 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
             value = outcome_value(board)
         elif node:
             policy, value = net(board_to_tensor(board).to(device))
-            policy = torch.softmax(policy, dim=1)
+            # policy = torch.softmax(policy, dim=1)
+
+            moves = Moves()
+            generate_moves(ctypes.byref(board), ctypes.byref(moves))
+            policy = torch.zeros(4762)
+            for i in range(moves.count):
+                idx = move_to_policy_index(moves.moves[i])
+                policy[idx] = 1.0
+            policy /= policy.sum()
             node.expand(board, policy[0])
 
         if node:
@@ -241,10 +257,10 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
                 v = -v
                 n.Q = n.total_value / n.visit_count
 
-            # if i % 1000 == 999:
-            #     print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
-            #     for move, child in root.children.items():
-            #         print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
+            if i % 10_000 == 10_000 - 1:
+                print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
+                for move, child in root.children.items():
+                    print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
     
     return root
 

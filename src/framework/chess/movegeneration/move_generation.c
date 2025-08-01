@@ -77,12 +77,7 @@ void generate_moves(const Board* board, Moves* move_list) {
     }
 
     // loop over all the bitboards
-    for (int piece = P; piece <= k; piece++) {
-        if (side == white && (piece < P || piece > K))
-            continue;
-        if (side == black && (piece < p || piece > k))
-            continue;
-
+    for (int piece = (side == white ? P : p); piece <= (side == white ? K : k); piece++) {
         bitboard = board->bitboards[piece];
 
         while (bitboard) {
