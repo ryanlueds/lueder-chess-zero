@@ -5,7 +5,7 @@ chess engine
 ## Features
 - [x] bitboards with magic square stuff
 - [x] pretty fast move gen
-- [ ] mcts that actually works
+- [x] mcts that actually works
 - [ ] working python code
 
 ## Build
@@ -52,5 +52,5 @@ move: g1h3   nodes: 120669525
 
 Depth: 7
 Nodes: 3195901860
-Time: 6828ms
+Time: 6069ms
 ```
