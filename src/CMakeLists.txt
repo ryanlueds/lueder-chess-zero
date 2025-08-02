@@ -23,7 +23,7 @@ include_directories(
     ./tests
 )
 
-set(CMAKE_C_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_DEBUG "-g -Wall -O0")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG")
 
 add_library(chess_engine SHARED ${CORE_SRCS})
