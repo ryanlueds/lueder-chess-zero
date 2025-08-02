@@ -28,8 +28,7 @@ cmake --build build
 
 ## perft(7)
 ```
-Performance test
-
+Performance test:
 move: a2a3   nodes: 106743106
 move: a2a4   nodes: 137077337
 move: b2b3   nodes: 133233975
@@ -53,5 +52,5 @@ move: g1h3   nodes: 120669525
 
 Depth: 7
 Nodes: 3195901860
-Time: 7215ms
+Time: 6828ms
 ```
