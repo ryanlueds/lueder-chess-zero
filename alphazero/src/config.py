@@ -24,9 +24,9 @@ class Config:
     # haha so cool
     def __post_init__(self):
         if self.debug:
-            self.mcts.num_simulations = 50
-            self.self_play.num_games = 12
-            self.self_play.num_simulations = 50
-            self.self_play.temp_threshold = 15
+            self.mcts.num_simulations = 5
+            self.self_play.num_games = 2
+            self.self_play.num_simulations = 5
+            self.self_play.temp_threshold = 5
             self.self_play.depth_limit = 10
 

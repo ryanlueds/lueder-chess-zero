@@ -240,27 +240,13 @@ def mcts_search(root_state, net, config: Config, device, add_noise=False):
                 v = -v
                 n.Q = n.total_value / n.visit_count
 
-            # if i % 10_000 == 10_000 - 1:
-            #     print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
-            #     for move, child in root.children.items():
-            #         print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
+            if i % 10_000 == 10_000 - 1:
+                print(f"\n\n{bcolors.FAIL}------- Iteration {i+1} -------{bcolors.ENDC}")
+                for move, child in root.children.items():
+                    print(f"    move={move_to_str(move):6}  visits={child.visit_count:4d}   Q={child.Q: .3f}")
     
     return root
 
-def find_best_move(fen, num_simulations, net):
-    config = Config()
-    config.mcts.num_simulations = num_simulations
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    board = Board()
-    parse_fen(ctypes.byref(board), fen.encode('utf-8'))
-
-    root = mcts_search(board, net, config, device)
-    if not root.children:
-        return None
-
-    best_move = max(root.children.keys(), key=lambda m: root.children[m].visit_count)
-    return move_to_str(best_move)
 
 def calculate_material_advantage(board: Board):
     piece_values = {

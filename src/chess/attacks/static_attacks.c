@@ -159,7 +159,6 @@ uint64_t get_pawn_attack(int side, int square) {
     } else {
         // bot left
         attacks |= ((bb & not_a_file) << 7);
-
         // bot right
         attacks |= ((bb & not_h_file) << 9);
     }

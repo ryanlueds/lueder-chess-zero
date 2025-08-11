@@ -1,17 +1,4 @@
-import torch
-import torch.nn as nn
-import unittest
-import ctypes
-import sys
-import os
-from enum import IntEnum
-import inspect
-from resnet import ResNet6
-from config import Config
-import mcts
 from wrapper import (
-    Board, Moves,
-    init_all_attack_tables, parse_fen, make_move, generate_moves, is_in_check,
     get_move_source, get_move_target, get_move_promoted
 )
 
@@ -49,23 +36,6 @@ def move_to_str(move):
         move_str += promoted_char
     return move_str
 
-
-def find_best_move(fen, num_simulations, net):
-    config = Config()
-    config.mcts.num_simulations = num_simulations
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    board = Board()
-    parse_fen(ctypes.byref(board), fen.encode('utf-8'))
-
-    root = mcts.mcts_search(board, net, config, device)
-    if not root.children:
-        return None
-
-    sorted_children = sorted(root.children.items(), key=lambda item: item[1].visit_count, reverse=True)
-    
-    best_move = max(root.children.keys(), key=lambda m: root.children[m].visit_count)
-    return move_to_str(best_move)
 
 
 def convert_channel_to_bitboard(tensor_channel):

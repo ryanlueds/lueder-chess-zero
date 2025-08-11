@@ -15,4 +15,4 @@ alphazero/data/
 alphazero/models/
 alphazero/runs/
 alphazero/bin/
-alphazero/chess_games/
+alphazero/chess_games/**
