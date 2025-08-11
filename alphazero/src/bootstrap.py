@@ -59,6 +59,13 @@ def plot_losses(output_dir, policy_losses, value_losses):
     plt.savefig(os.path.join(output_dir, 'bootstrap_loss_graph.png'))
     plt.close()
 
+def scores_to_probabilities(top_moves, device):
+    scores = torch.tensor([move['score'] for move in top_moves], dtype=torch.float32, device=device)
+    # Normalize scores to be in a reasonable range for softmax
+    # Dividing by 100 converts centipawns to pawn units.
+    scaled_scores = scores / 100.0
+    return torch.nn.functional.softmax(scaled_scores, dim=0)
+
 def run_bootstrap_training(config: Config, args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
@@ -90,19 +97,30 @@ def run_bootstrap_training(config: Config, args):
                 parse_fen(ctypes.byref(c_board), data['fen'].encode('utf-8'))
                 state_tensor = board_to_tensor(c_board)
 
+                top_moves = data.get('top_moves')
+                if not top_moves:
+                    continue
+
+                probabilities = scores_to_probabilities(top_moves, device)
+                policy_target = torch.zeros(4672, device=device)
+
                 legal_moves = Moves()
                 generate_moves(ctypes.byref(c_board), ctypes.byref(legal_moves))
+                legal_move_map = {move_to_str(legal_moves.moves[i]): legal_moves.moves[i] for i in range(legal_moves.count)}
+
+                for i, move_data in enumerate(top_moves):
+                    move_str = move_data['move']
+                    if move_str in legal_move_map:
+                        move = legal_move_map[move_str]
+                        policy_idx = move_to_policy_index(move)
+                        if policy_idx != -1:
+                            policy_target[policy_idx] = probabilities[i]
                 
-                policy_idx = -1
-                for i in range(legal_moves.count):
-                    if move_to_str(legal_moves.moves[i]) == data['played_move']:
-                        policy_idx = move_to_policy_index(legal_moves.moves[i])
-                        break
-                
-                if policy_idx != -1:
+                if torch.sum(policy_target) > 0:
+                    policy_target /= torch.sum(policy_target)
                     all_states.append(state_tensor)
-                    all_policies.append(policy_idx)
-                    all_values.append(torch.tensor([max(-1.0, min(1.0, data['position_evaluation'] / 1000.0))], dtype=torch.float32))
+                    all_policies.append(policy_target.unsqueeze(0))
+                    all_values.append(torch.tensor([max(-1.0, min(1.0, data['position_evaluation'] / 1000.0))], dtype=torch.float32, device=device))
 
     if not all_states:
         logging.error("No positions were processed. Exiting.")
@@ -110,7 +128,7 @@ def run_bootstrap_training(config: Config, args):
 
     dataset = TensorDataset(
         torch.cat(all_states),
-        torch.tensor(all_policies, dtype=torch.long),
+        torch.cat(all_policies),
         torch.cat(all_values)
     )
     data_loader = DataLoader(dataset, batch_size=256, shuffle=True)
@@ -120,6 +138,7 @@ def run_bootstrap_training(config: Config, args):
     
     policy_losses, value_losses = [], []
 
+    # TODO: Train for multiple epochs
     avg_policy_loss, avg_value_loss = train_epoch(model, device, optimizer, data_loader)
     policy_losses.append(avg_policy_loss)
     value_losses.append(avg_value_loss)
