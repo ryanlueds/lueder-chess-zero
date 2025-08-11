@@ -77,7 +77,7 @@ def play_game(config: Config, device_str: str, model_path: str, _):
 
         policy = torch.zeros(4672)
         for move, child in root.children.items():
-            policy_idx = mcts.move_to_policy_index(move, board)
+            policy_idx = mcts.move_to_policy_index(move)
             policy[policy_idx] = child.visit_count
         if torch.sum(policy) > 0:
             policy /= torch.sum(policy)
@@ -93,13 +93,13 @@ def play_game(config: Config, device_str: str, model_path: str, _):
             if torch.sum(move_probs) > 0:
                 move_probs /= torch.sum(move_probs)
                 selected_move_idx = torch.multinomial(move_probs, 1).item()
-                selected_move = list(root.children.keys())[selected_move_idx]
+                selected_move = list(root.children.keys())[int(selected_move_idx)]
             else:
                 selected_move = random.choice(list(root.children.keys()))
         selected_move = max(root.children.keys(), key=lambda m: root.children[m].visit_count)
 
-        policy_idx = mcts.move_to_policy_index(selected_move, board)
-        legal_moves = [move_to_str(m) for m in root.children.keys()]
+        policy_idx = mcts.move_to_policy_index(selected_move)
+        # legal_moves = [move_to_str(m) for m in root.children.keys()]
         # logging.info(f"Turn {move_count + 1}: net picked index {policy_idx} -> move: {move_to_str(selected_move)}")
         # logging.info(f"         legal: {legal_moves}")
         # logging.info(f"         selected: {move_to_str(selected_move)}")

@@ -1,9 +1,7 @@
-import zstandard
 import chess.pgn
 import argparse
 import os
 import logging
-from io import TextIOWrapper
 from glob import glob
 import multiprocessing
 
