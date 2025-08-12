@@ -59,8 +59,10 @@ def plot_losses(output_dir, policy_losses, value_losses):
     plt.savefig(os.path.join(output_dir, 'bootstrap_loss_graph.png'))
     plt.close()
 
-def scores_to_probabilities(top_moves, device):
+def scores_to_probabilities(top_moves, is_black_turn, device):
     scores = torch.tensor([move['score'] for move in top_moves], dtype=torch.float32, device=device)
+    if is_black_turn:
+        scores = -scores
     # Normalize scores to be in a reasonable range for softmax
     # Dividing by 100 converts centipawns to pawn units.
     scaled_scores = scores / 100.0
@@ -92,6 +94,10 @@ def run_bootstrap_training(config: Config, args):
             for data in annotated_data:
                 if len(all_states) >= max_positions:
                     break
+
+                fullmove_number = int(data['fen'].split(' ')[-1])
+                if fullmove_number < 5:
+                    continue
                 
                 c_board = Board()
                 parse_fen(ctypes.byref(c_board), data['fen'].encode('utf-8'))
@@ -101,7 +107,8 @@ def run_bootstrap_training(config: Config, args):
                 if not top_moves:
                     continue
 
-                probabilities = scores_to_probabilities(top_moves, device)
+                is_black_turn = c_board.side == 1
+                probabilities = scores_to_probabilities(top_moves, is_black_turn, device)
                 policy_target = torch.zeros(4672, device=device)
 
                 legal_moves = Moves()
@@ -120,7 +127,15 @@ def run_bootstrap_training(config: Config, args):
                     policy_target /= torch.sum(policy_target)
                     all_states.append(state_tensor)
                     all_policies.append(policy_target.unsqueeze(0))
-                    all_values.append(torch.tensor([max(-1.0, min(1.0, data['position_evaluation'] / 1000.0))], dtype=torch.float32, device=device))
+
+                    stockfish_eval_white_pov = data['position_evaluation']
+                    value = stockfish_eval_white_pov
+                    # If it's black's turn (side=1), the value must be inverted
+                    if c_board.side == 1:
+                        value = -value
+                    
+                    normalized_value = max(-1.0, min(1.0, value / 1000.0))
+                    all_values.append(torch.tensor([normalized_value], dtype=torch.float32, device=device))
 
     if not all_states:
         logging.error("No positions were processed. Exiting.")
@@ -131,7 +146,16 @@ def run_bootstrap_training(config: Config, args):
         torch.cat(all_policies),
         torch.cat(all_values)
     )
-    data_loader = DataLoader(dataset, batch_size=256, shuffle=True)
+
+    num_workers = os.cpu_count()
+    logging.info(f"Using {num_workers} workers for data loading.")
+    data_loader = DataLoader(
+        dataset, 
+        batch_size=256, 
+        shuffle=True, 
+        num_workers=num_workers,
+        pin_memory=True if device.type == 'cuda' else False
+    )
 
     model = ResNet6().to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
