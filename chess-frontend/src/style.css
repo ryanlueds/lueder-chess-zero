@@ -1,0 +1,30 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  background: #181818;
+}
+.container {
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 1rem;
+}
+
+#board {
+  width: 60vmin;
+  height: 60vmin;
+  max-width: 640px;
+  max-height: 640px;
+  margin: auto;
+}
+
+#fen-display {
+  width: 100vw;
+  margin-bottom: 10rem;
+  font-family: 'Courier New', Courier, monospace;
+  color: #e4e4e4;
+}
