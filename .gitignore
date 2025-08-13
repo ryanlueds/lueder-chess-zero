@@ -4,6 +4,8 @@
 *.so.*
 *.dylib
 
+*node_modules*
+
 *__pycache__
 *perf.data*
 

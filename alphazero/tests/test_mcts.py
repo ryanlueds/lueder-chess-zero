@@ -33,13 +33,29 @@ class Pieces(IntEnum):
     k=11
 
 
+class UniformPolicyNet(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        policy = torch.ones(1, 4672) / 4672
+        value = torch.zeros(1, 1)
+        return policy, value
 
 
 class TestMCTS(unittest.TestCase):
     def setUp(self):
         init_all_attack_tables()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
         self.real_net = ResNet6().to(self.device)
+        model_path = os.path.join(os.path.dirname(__file__), '..', 'runs', 'resnet6_3M_games', 'bootstrap_model.pth')
+        if os.path.exists(model_path):
+            self.real_net.load_state_dict(torch.load(model_path, map_location=self.device))
+        self.real_net.eval()
+
+        self.uniform_net = UniformPolicyNet().to(self.device)
+
         self.board = Board()
         parse_fen(self.board, b"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
@@ -142,32 +158,38 @@ class TestMCTS(unittest.TestCase):
     def test_mate_in_1(self):
         fen = "1k6/ppp5/8/8/8/8/8/4K2R w - - 0 1"
         winning_move = "h1h8"
-        best_move = find_best_move(fen, 10000, self.real_net)
+        best_move = find_best_move(fen, 2000, self.real_net)
         self.assertEqual(best_move, winning_move)
 
     def test_mate_in_1_black(self):
         fen = "qk6/8/8/8/8/8/PPP5/1K6 b - - 0 1"
         winning_move = "a8h1"
-        best_move = find_best_move(fen, 10000, self.real_net)
+        best_move = find_best_move(fen, 2000, self.real_net)
         self.assertEqual(best_move, winning_move)
 
     def test_mate_in_1_capture(self):
         fen = "r1bqk2r/ppp1bppp/8/8/6PN/5P2/PPPPP3/RNBQKB2 b - - 0 1"
         winning_move = "e7h4"
-        best_move = find_best_move(fen, 10000, self.real_net) # these should not require this many simulations
+        best_move = find_best_move(fen, 2000, self.real_net) # these should not require this many simulations
         self.assertEqual(best_move, winning_move)
 
-    # def test_mate_in_2(self):
-    #     fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
-    #     winning_move = "e7h4"
-    #     best_move = find_best_move(fen, 100_000, self.real_net)
-    #     self.assertEqual(best_move, winning_move)
+    def test_mate_in_2_model(self):
+        fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
+        winning_move = "e7h4"
+        best_move = find_best_move(fen, 5000, self.real_net)
+        self.assertEqual(best_move, winning_move)
 
-    # def test_mate_in_3(self):
-    #     fen = "r1bqk2r/ppp1bppp/8/4B3/6P1/5P2/PPPPP3/3RKB1R b kq - 2 6"
-    #     winning_move = "e7h4"
-    #     best_move = find_best_move(fen, 200_000, self.real_net)
-    #     self.assertEqual(best_move, winning_move)
+    def test_mate_in_2_uniform(self):
+        fen = "r1bqk2r/ppp1bppp/8/5N2/6P1/5P2/PPPPP3/RNBQKB2 b Qkq - 2 6"
+        winning_move = "e7h4"
+        best_move = find_best_move(fen, 50000, self.uniform_net)
+        self.assertNotEqual(best_move, winning_move)
+
+    def test_mate_in_3_model(self):
+        fen = "r1bqk2r/ppp1bppp/8/4B3/6P1/5P2/PPPPP3/3RKB1R b kq - 2 6"
+        winning_move = "e7h4"
+        best_move = find_best_move(fen, 10000, self.real_net)
+        self.assertEqual(best_move, winning_move)
 
 if __name__ == "__main__":
     unittest.main()
