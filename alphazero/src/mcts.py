@@ -293,10 +293,11 @@ def outcome_value(state):
     generate_moves(ctypes.byref(state), ctypes.byref(moves))
     if moves.count == 0:
         if is_in_check(ctypes.byref(state), state.side):
-            return torch.tensor([1.0], dtype=torch.float32) # checkmate TODO
+            return torch.tensor([-1.0], dtype=torch.float32)  # checkmate
         else:
-            return torch.tensor([0.0], dtype=torch.float32) # stalemate
-    return torch.tensor([0.0], dtype=torch.float32) # throw error?
+            return torch.tensor([0.0], dtype=torch.float32)  # stalemate
+    logging.warning("outcome_value called on a non-terminal state")
+    return torch.tensor([0.0], dtype=torch.float32)
 
 
 if __name__ == "__main__":
