@@ -6,7 +6,8 @@ chess engine
 - [x] bitboards with magic square stuff
 - [x] pretty fast move gen
 - [x] mcts that actually works
-- [ ] working python code
+- [x] working python code
+- [ ] an actual trained model
 
 ## Build
 ```
