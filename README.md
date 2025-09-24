@@ -7,7 +7,7 @@ chess engine
 - [x] pretty fast move gen
 - [x] mcts that actually works
 - [x] working python code
-- [ ] an actual trained model
+- [x] an actual trained model
 
 ## Build
 ```
